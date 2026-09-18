@@ -1,0 +1,16 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Local cache data (built in Phase 5)
+gene_cache.json
+
+# Fetched sequence files (built in Phase 7)
+*.fasta
