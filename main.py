@@ -1,20 +1,12 @@
-import requests
+from Bio import Entrez
 
-def main():
-    base_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
-    gene_symbol = "BRCA1"
+Entrez.email = "2ezfried@gmail.com"
 
-    params = {
-        "db": "gene",
-        "term": gene_symbol,
-    }
-
-    response = requests.get(base_url, params=params)
-    print(response.text)
-
-    chunks = response.text.split("<Id>")
-    print(chunks[1])
-    clean_id = chunks[1].split("</Id>")[0]
-    print(clean_id)
+def search_gene_id(symbol, organism="Homo sapiens"):
+    term = f"{symbol}[sym] AND {organism}[orgn]"
+    handle = Entrez.esearch(db="gene", term=term)
+    record = Entrez.read(handle)
+    return record["IdList"][0]
 if __name__ == "__main__":
-    main()
+    gene_id = search_gene_id("BRCA1")
+    print(gene_id)
