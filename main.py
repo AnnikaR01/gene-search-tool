@@ -23,6 +23,19 @@ def search_gene(symbol, organism="Homo sapiens"):
     gene_id = search_gene_id(symbol, organism)
     return get_gene_summary(gene_id)
 
+def print_report(gene):
+    print(f"Symbol: {gene['symbol']}")
+    print(f"Description: {gene['description']}")
+    print(f"Chromosome: {gene['chromosome']}")
+    print(f"Map location: {gene['map_location']}")
+    print(f"Summary: {gene['summary']}")
+
 if __name__ == "__main__":
-    result = search_gene("BRCA1")
-    print(result)
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Look up a gene from NCBI")
+    parser.add_argument("symbol", help="Gene symbol to search for, e.g. BRCA1")
+    args = parser.parse_args()
+
+    result = search_gene(args.symbol)
+    print_report(result)
