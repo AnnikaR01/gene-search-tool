@@ -6,6 +6,8 @@ def search_gene_id(symbol, organism="Homo sapiens"):
     term = f"{symbol}[sym] AND {organism}[orgn]"
     handle = Entrez.esearch(db="gene", term=term)
     record = Entrez.read(handle)
+    if len(record["IdList"])== 0:
+        raise ValueError(f"No gene found for symbol '{symbol}' in {organism}")
     return record["IdList"][0]
 
 def get_gene_summary(gene_id):
@@ -19,8 +21,12 @@ def get_gene_summary(gene_id):
         "map_location": doc.get("MapLocation", "unknown"),
         "summary": doc.get("Summary", ""),
     }
+
+import time 
+
 def search_gene(symbol, organism="Homo sapiens"):
     gene_id = search_gene_id(symbol, organism)
+    time.sleep(0.34)
     return get_gene_summary(gene_id)
 
 def print_report(gene):
@@ -32,10 +38,16 @@ def print_report(gene):
 
 if __name__ == "__main__":
     import argparse
+    import urllib.error
 
     parser = argparse.ArgumentParser(description="Look up a gene from NCBI")
     parser.add_argument("symbol", help="Gene symbol to search for, e.g. BRCA1")
     args = parser.parse_args()
 
-    result = search_gene(args.symbol)
-    print_report(result)
+    try:
+        result = search_gene(args.symbol)
+        print_report(result)
+    except ValueError as e:
+        print(f"Error: {e}")
+    except urllib.error.URLError as e:
+        print(f"Network error reaching NCBI: {e}")
