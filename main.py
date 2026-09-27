@@ -1,6 +1,8 @@
 from Bio import Entrez
+import json
 
 Entrez.email = "2ezfried@gmail.com"
+CACHE_FILE = "gene_cache.json"
 
 def search_gene_id(symbol, organism="Homo sapiens"):
     term = f"{symbol}[sym] AND {organism}[orgn]"
@@ -22,13 +24,33 @@ def get_gene_summary(gene_id):
         "summary": doc.get("Summary", ""),
     }
 
+def load_cache():
+    try:
+        with open(CACHE_FILE, "r") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {}
+
+def save_cache(cache):
+    with open(CACHE_FILE, "w") as f:
+        json.dump(cache, f)
+
 import time 
 
 def search_gene(symbol, organism="Homo sapiens"):
+    cache = load_cache()
+    if symbol in cache:
+        print("(from cache)")
+        return cache[symbol]
+
     gene_id = search_gene_id(symbol, organism)
     time.sleep(0.34)
-    return get_gene_summary(gene_id)
+    summary = get_gene_summary(gene_id)
 
+    cache[symbol] = summary
+    save_cache(cache)
+    print("(fresh API call)")
+    return summary
 def print_report(gene):
     print(f"Symbol: {gene['symbol']}")
     print(f"Description: {gene['description']}")
