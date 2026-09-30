@@ -1,4 +1,4 @@
-from Bio import Entrez
+from Bio import Entrez, SeqIO
 import json
 
 Entrez.email = "2ezfried@gmail.com"
@@ -32,12 +32,22 @@ def get_gene_summary(gene_id):
     record = Entrez.read(handle)
     doc = record["DocumentSummarySet"]["DocumentSummary"][0]
     return {
+        "gene_id": gene_id,
         "symbol": doc["Name"],
         "description": doc["Description"],
         "chromosome": doc.get("Chromosome", "unknown"),
         "map_location": doc.get("MapLocation", "unknown"),
         "summary": doc.get("Summary", ""),
     }
+def fetch_gene_sequence(gene_id):
+    link_handle = Entrez.elink(dbfrom="gene", db="nucleotide", id=gene_id, linkname="gene_nuccore_refseqrna")
+    link_record = Entrez.read(link_handle)
+    nuc_id = link_record[0]["LinkSetDb"][0]["Link"][0]["Id"]
+
+    seq_handle = Entrez.efetch(db="nucleotide", id=nuc_id, rettype="fasta", retmode="text")
+    seq_record = SeqIO.read(seq_handle, "fasta")
+    seq_handle.close()
+    return seq_record
 
 def load_cache():
     try:
@@ -82,11 +92,17 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Look up a gene from NCBI")
     parser.add_argument("symbol", help="Gene symbol to search for, e.g. BRCA1")
     parser.add_argument("--organism", default="Homo sapiens", help="Organism to search, e.g. 'Mus musculus'")
+    parser.add_argument("--sequence", action="store_true", help="Also fetch and save the gene's reference mRNA sequence as FASTA")
     args = parser.parse_args()
 
     try:
         result = search_gene(args.symbol,args.organism)
         print_report(result)
+        if args.sequence:
+            seq_record = fetch_gene_sequence(result["gene_id"])
+            filename = f"{args.symbol}.fasta"
+            SeqIO.write(seq_record, filename, "fasta")
+            print(f"Sequence saved to {filename} ({len(seq_record.seq)} bases)")
     except ValueError as e:
         print(f"Error: {e}")
     except urllib.error.URLError as e:
