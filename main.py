@@ -54,16 +54,17 @@ import time
 
 def search_gene(symbol, organism="Homo sapiens"):
     cache = load_cache()
-    if symbol in cache:
+    cache_key = f"{symbol}_{organism}"
+    if cache_key in cache:
         print("(from cache)")
-        return cache[symbol]
+        return cache[cache_key]
 
     id_list = search_gene_id(symbol, organism)
     gene_id = choose_gene_id(id_list, symbol)
     time.sleep(0.34)
     summary = get_gene_summary(gene_id)
 
-    cache[symbol] = summary
+    cache[cache_key] = summary
     save_cache(cache)
     print("(fresh API call)")
     return summary
@@ -80,10 +81,11 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Look up a gene from NCBI")
     parser.add_argument("symbol", help="Gene symbol to search for, e.g. BRCA1")
+    parser.add_argument("--organism", default="Homo sapiens", help="Organism to search, e.g. 'Mus musculus'")
     args = parser.parse_args()
 
     try:
-        result = search_gene(args.symbol)
+        result = search_gene(args.symbol,args.organism)
         print_report(result)
     except ValueError as e:
         print(f"Error: {e}")
