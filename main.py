@@ -12,16 +12,18 @@ def search_gene_id(symbol, organism="Homo sapiens"):
         raise ValueError(f"No gene found for symbol '{symbol}' in {organism}")
     return record["IdList"]
 
+def get_candidates(id_list):
+    handle = Entrez.esummary(db="gene", id=",".join(id_list))
+    record = Entrez.read(handle)
+    return record["DocumentSummarySet"]["DocumentSummary"]
+
 def choose_gene_id(id_list, symbol):
     if len(id_list) == 1:
         return id_list[0]
 
-    handle = Entrez.esummary(db="gene", id=",".join(id_list))
-    record = Entrez.read(handle)
-    docs = record["DocumentSummarySet"]["DocumentSummary"]
-
+    docs = get_candidates(id_list)
     print(f"Multiple matches found for '{symbol}':")
-    for i , doc in enumerate(docs, start=1):
+    for i, doc in enumerate(docs, start=1):
         print(f"{i}. {doc['Name']} - {doc['Description']} (chromosome {doc.get('Chromosome', 'unknown')})")
 
     choice = input("Which one did you mean? Enter a number: ")
