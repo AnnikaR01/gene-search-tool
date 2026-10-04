@@ -1,5 +1,5 @@
 import streamlit as st
-from main import search_gene_id, get_candidates, get_gene_summary
+from main import search_gene_id, get_candidates, get_gene_summary, fetch_gene_sequence
 
 st.title("Gene Search Tool")
 
@@ -22,3 +22,9 @@ if symbol:
     st.write(f"**Chromosome:** {result['chromosome']}")
     st.write(f"**Map location:** {result['map_location']}")
     st.write(f"**Summary:** {result['summary']}")
+
+    if st.checkbox("Also fetch reference mRNA sequence"):
+        seq_record = fetch_gene_sequence(gene_id)
+        fasta_text = seq_record.format("fasta")
+        st.write(f"Sequence length: {len(seq_record.seq)} bases")
+        st.download_button("Download FASTA", data=fasta_text, file_name=f"{symbol}.fasta", mime="text/plain")
